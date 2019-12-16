@@ -160,7 +160,7 @@ Next, you need to author the Models needed for your API. Make sure that each mod
 
 ## Database Management
 
-You will be using the [Official Bangazon SQL](./bangazon.sql) file to create your database. Create the database using Visual Studio.
+You will be using the [Official Bangazon SQL](./Bangazon.sql) file to create your database. Create the database using Visual Studio.
 
 ## Controllers
 
