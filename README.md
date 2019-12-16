@@ -26,7 +26,7 @@ To see examples from the prototype API you can use this base URL:
 
 https://bangazon-prototype-api.herokuapp.com/
 
-**🔥🔥 Be sure to check in with your lead developer, product owner, or scrum master if you have _any_ questions 🔥🔥**
+**🔥🔥 Check in with your lead developer, product owner, or scrum master if you have _any_ questions 🔥🔥**
 
 ## Supported URL Endpoints
 
