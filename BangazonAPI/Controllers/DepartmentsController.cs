@@ -79,11 +79,19 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT d.Id, d.Name, d.Budget
+                        SELECT d.Id AS DepartmentId, 
+                        d.Name AS DepartmentName, 
+                        d.Budget AS DepartmentBudget,
+                        e.Id as EmployeeId,
+                        e.FirstName AS EmployeeFirstName,
+                        e.LastName AS EmmployeeLastName,
+                        e.DepartmentId AS EmployeeDepartmentID
                         FROM Department d
-                        WHERE Id = @id";
+                        WHERE Id = @id
+                        LEFT JOIN Employee AS d.Id = e.DepartmentId";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
+                    List<Employee> employee = new List<Employee>
 
                     Department department = null;
 
@@ -95,6 +103,15 @@ namespace BangazonAPI.Controllers
                             Budget = reader.GetInt32(reader.GetOrdinal("Budget")),
                             Name = reader.GetString(reader.GetOrdinal("Name"))
                         };
+
+                         employee = new Employee
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
+
+                        };
+
+
                     }
                     reader.Close();
 
