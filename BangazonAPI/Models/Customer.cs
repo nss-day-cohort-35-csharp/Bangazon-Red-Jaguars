@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace BangazonAPI.Models
@@ -41,5 +42,7 @@ namespace BangazonAPI.Models
         [Required]
         [StringLength(55)]
         public string phone { get; set; }
+
+        public List<Product> products { get; set; }
     }
 }
