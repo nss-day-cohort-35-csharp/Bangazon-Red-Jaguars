@@ -15,7 +15,7 @@ namespace BangazonAPI.Models
         [Required]
         public int ProductTypeId { get; set; }
         [Required]
-        public double Price { get; set; }
+        public decimal Price { get; set; }
         [Required]
         [StringLength(255, MinimumLength = 3, ErrorMessage = "Titles require a minimum of 3 characters and a max of 255")]
         public string Title { get; set; }
