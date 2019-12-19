@@ -7,6 +7,7 @@ namespace BangazonAPI.Models
 {
     public class Department
     {
+        [Required]
         public int Id { get; set; }
 
         [Required]
