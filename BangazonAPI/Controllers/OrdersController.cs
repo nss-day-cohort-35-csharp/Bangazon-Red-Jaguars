@@ -94,7 +94,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet("{id})", Name = "GetOrder")]
+        [HttpGet("{id}", Name = "GetOrder")]
         public async Task<IActionResult> Orders([FromRoute]int id)
         {
             using (SqlConnection conn = Connection)
@@ -108,33 +108,28 @@ namespace BangazonAPI.Controllers
                         "LEFT JOIN Customer ON [Order].CustomerId = Customer.Id " +
                         "LEFT JOIN Product as P ON Customer.Id = P.CustomerId " +
                         "WHERE [Order].Id = @id";
-                    cmd.Parameters.Add(new SqlParameter("@customerId", id));
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                    List<Order> orders = new List<Order>();
+                    Order wantedOrder = null;
                     while (reader.Read())
                     {
-                        int currentOrderID = reader.GetInt32(reader.GetOrdinal("OrderID"));
-                        Order order = orders.FirstOrDefault(o => o.id == currentOrderID);
-                        if (order == null)
+                        if (wantedOrder == null)
                         {
-                            Order newOrder = new Order();
-
-                            newOrder.id = currentOrderID;
-                            newOrder.customerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId"));
+                            wantedOrder = new Order();
+                            wantedOrder.id = reader.GetInt32(reader.GetOrdinal("OrderID"));
+                            wantedOrder.customerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId"));
                             if (!reader.IsDBNull(reader.GetOrdinal("UserPaymentTypeId")))
                             {
-                                newOrder.userPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId"));
+                                wantedOrder.userPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId"));
                             }
-                            newOrder.products = new List<Product>();
-
-                            orders.Add(newOrder);
+                            wantedOrder.products = new List<Product>();
                         }
 
                         int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
-                        foreach (Order orderInList in orders)
-                        {
-                            if (orderInList.customerId == reader.GetInt32(reader.GetOrdinal("ProductCustomerID")) && orderInList.products.FirstOrDefault(p => p.Id == currentProductID) == null)
+                     
+                        
+                            if (wantedOrder.customerId == reader.GetInt32(reader.GetOrdinal("ProductCustomerID")) && wantedOrder.products.FirstOrDefault(p => p.Id == currentProductID) == null)
                             {
                                 Product newProduct = new Product
                                 {
@@ -147,13 +142,19 @@ namespace BangazonAPI.Controllers
                                     Description = reader.GetString(reader.GetOrdinal("Description"))
                                 };
 
-                                orderInList.products.Add(newProduct);
+                                wantedOrder.products.Add(newProduct);
                             }
-                        }
+                        
                     }
+
+                    if (wantedOrder == null)
+                    {
+                        return NotFound();
+                    }
+
                     reader.Close();
 
-                    return Ok(orders);
+                    return Ok(wantedOrder);
                 }
             }
         }
