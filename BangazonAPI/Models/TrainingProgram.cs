@@ -19,10 +19,16 @@ namespace BangazonAPI.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Training Program Name is required")]
-        [StringLength(100, MinimumLength = 1, ErrorMessage = "Training Program Name length should be between 1 and 100 characters")]
+        [StringLength(255, MinimumLength = 1, ErrorMessage = "Training Program Name length should be between 1 and 255 characters")]
         public string Name { get; set; }
+        
+        [Required(ErrorMessage = "Start Date of Training Program is required")]
         public DateTime StartDate { get; set; }
+        
+        [Required(ErrorMessage = "End Date of Training Program is required")]
         public DateTime EndDate { get; set; }
-        public int MaxAttendees { get; set; } = 0;
+
+        [Required(ErrorMessage = "Maximum Number of Attendees is required for Training Program")]
+        public int MaxAttendees { get; set; }
     }
 }
