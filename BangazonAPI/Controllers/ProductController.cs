@@ -11,15 +11,15 @@ using Microsoft.Data.SqlClient;
 using BangazonAPI.Models;
 using Microsoft.AspNetCore.Http;
 
-namespace StudentExercisesAPI.Controllers
+namespace BangazonAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class InstructorsController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         private readonly IConfiguration _config;
 
-        public InstructorsController(IConfiguration config)
+        public ProductsController(IConfiguration config)
         {
             _config = config;
         }
@@ -33,92 +33,73 @@ namespace StudentExercisesAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]string firstName, [FromQuery]string lastName, [FromQuery] string slackHandle, [FromQuery] string specialty, [FromQuery] string orderBy, [FromQuery] bool desc)
+        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery]string sortBy)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT  i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, c.Id AS CohortId, c.Name AS CohortName FROM Instructor i
-                                       LEFT JOIN Cohort c ON i.CohortId = c.Id
+                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex FROM Product p
+                                       
+                                       LEFT JOIN OrderProduct op ON p.Id = op.ProductId
+                                       GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded
+                                       
+                                       HAVING 1=1";
 
-                                        WHERE 1=1";
-
-                    if (!string.IsNullOrWhiteSpace(firstName))
+                    if (!string.IsNullOrWhiteSpace(q))
                     {
-                        cmd.CommandText += " AND i.FirstName LIKE @FirstName";
-                        cmd.Parameters.Add(new SqlParameter(@"FirstName", firstName));
+                        cmd.CommandText += " AND (p.Title LIKE @Search) OR (p.[Description] LIKE @Search)";
+                        cmd.Parameters.Add(new SqlParameter(@"Search", "%" + q + "%"));
                     }
 
-                    if (!string.IsNullOrWhiteSpace(lastName))
+                    if (sortBy == "recent")
                     {
-                        cmd.CommandText += " AND i.LastName LIKE @LastName";
-                        cmd.Parameters.Add(new SqlParameter(@"LastName", "%" + lastName + "%"));
+                        cmd.CommandText += " ORDER BY p.DateAdded DESC";
+                        
                     }
 
-                    if (!string.IsNullOrWhiteSpace(slackHandle))
+                    if (sortBy == "popularity")
                     {
-                        cmd.CommandText += " AND i.SlackHandle LIKE @SlackHandle";
-                        cmd.Parameters.Add(new SqlParameter(@"SlackHandle", "%" + slackHandle + "%"));
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(specialty))
-                    {
-                        cmd.CommandText += " AND i.Specialty LIKE @Specialty";
-                        cmd.Parameters.Add(new SqlParameter(@"Specialty", "%" + specialty + "%"));
-                    }
-
-                    if (orderBy == "FirstName" || orderBy == "LastName" || orderBy == "SlackHandle" || orderBy == "Specialty")
-                    {
-                        cmd.CommandText += " ORDER BY @column";
-                        cmd.Parameters.Add(new SqlParameter(@"column", orderBy));
-                    }
-
-                    if (orderBy != null && desc == true)
-                    {
-                        cmd.CommandText += " DESC";
+                        cmd.CommandText += " ORDER BY COUNT(op.ProductId) DESC";
                     }
 
 
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-                    List<Instructor> instructors = new List<Instructor>();
+                    List<Product> products = new List<Product>();
 
 
                     while (reader.Read())
                     {
 
 
-                        Instructor instructor = new Instructor
+                        Product product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
-                            InstructorCohort = new Cohort()
-                            {
-                                Name = reader.GetString(reader.GetOrdinal("CohortName")),
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                StudentsInCohort = new List<Student>(),
-                                InstructorsInCohort = new List<Instructor>()
-                            }
+                           // ProductType = reader.GetString(reader.GetOrdinal("ProductType")),
+                            ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                            Description = reader.GetString(reader.GetOrdinal("Description")),
+                            Title = reader.GetString(reader.GetOrdinal("Title")),
+                            DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+                           // PopularityIndex = reader.GetInt32(reader.GetOrdinal("PopularityIndex"))
+
 
                         };
-                        instructors.Add(instructor);
+                        products.Add(product);
                     }
                     reader.Close();
                     //from controllerbase interface - returns official json result with 200 status code
-                    return Ok(instructors);
+                    return Ok(products);
                 }
             }
         }
 
 
-        [HttpGet("{id}", Name = "GetInstructor")]
+        [HttpGet("{id}", Name = "GetProduct")]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
             using (SqlConnection conn = Connection)
@@ -127,72 +108,72 @@ namespace StudentExercisesAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, c.Id AS CohortId, c.Name AS CohortName FROM Instructor i
-                                       LEFT JOIN Cohort c ON i.CohortId = c.Id
-
-                                        WHERE i.Id = @Id";
+                        SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded FROM Product p
+                                       
+                                       
+                                       
+                                        WHERE p.Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-                    Instructor instructor = null;
+                    Product product = null;
 
                     if (reader.Read())
                     {
-                        instructor = new Instructor
+                        product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            InstructorCohort = new Cohort()
-                            {
-                                Name = reader.GetString(reader.GetOrdinal("CohortName")),
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                StudentsInCohort = new List<Student>(),
-                                InstructorsInCohort = new List<Instructor>()
-                            }
+                           // ProductType = reader.GetString(reader.GetOrdinal("ProductType")),
+                            ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                            Description = reader.GetString(reader.GetOrdinal("Description")),
+                            Title = reader.GetString(reader.GetOrdinal("Title")),
+                            DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+                            //PopularityIndex = reader.GetInt32(reader.GetOrdinal("PopularityIndex"))
 
-                        };
+
+                        
+                         };
                     }
                     reader.Close();
 
-                    if (instructor == null)
+                    if (product == null)
                     {
-                        return NotFound($"No Instructor found wit the ID of {id}");
+                        return NotFound($"No Product found with the ID of {id}");
                     }
-                    return Ok(instructor);
+                    return Ok(product);
                 }
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Instructor instructor)
+        public async Task<IActionResult> Post([FromBody] Product product)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO Instructor (FirstName, LastName, SlackHandle, CohortId, Specialty)
-                                        OUTPUT INSERTED.Id
-                                        VALUES (@FirstName, @LastName, @SlackHandle, @CohortId, @Specialty)";
-                    cmd.Parameters.Add(new SqlParameter("@FirstName", instructor.FirstName));
-                    cmd.Parameters.Add(new SqlParameter("@LastName", instructor.LastName));
-                    cmd.Parameters.Add(new SqlParameter("@SlackHandle", instructor.SlackHandle));
-                    cmd.Parameters.Add(new SqlParameter("@CohortId", instructor.CohortId));
-                    cmd.Parameters.Add(new SqlParameter("@Specialty", instructor.Specialty));
+                    cmd.CommandText = @"INSERT INTO Product (DateAdded, ProductTypeId, CustomerId, Price, Title, Description)
+                                                OUTPUT INSERTED.Id
+                                                VALUES (@DateAdded, @ProductTypeId, @CustomerId, @Price, @Title, @Description)";
+                    cmd.Parameters.Add(new SqlParameter("@DateAdded", DateTime.Now));
+                    cmd.Parameters.Add(new SqlParameter("@ProductTypeId", product.ProductTypeId));
+                    cmd.Parameters.Add(new SqlParameter("@CustomerId", product.CustomerId));
+                    cmd.Parameters.Add(new SqlParameter("@Price", product.Price));
+                    cmd.Parameters.Add(new SqlParameter("@Title", product.Title));
+                    cmd.Parameters.Add(new SqlParameter("@Description", product.Description));
 
                     int newId = (int)await cmd.ExecuteScalarAsync();
-                    instructor.Id = newId;
-                    return CreatedAtRoute("GetInstructor", new { id = newId }, instructor);
+                    product.Id = newId;
+                    return CreatedAtRoute("GetProduct", new { id = newId }, product);
                 }
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Instructor instructor)
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Product product)
         {
             try
             {
@@ -201,18 +182,20 @@ namespace StudentExercisesAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE Instructor
-                                            SET FirstName = @FirstName,
-                                                LastName = @LastName,
-                                                SlackHandle = @SlackHandle,
-                                                CohortId = @CohortId,
-                                                Specialty = @Specialty
-                                            WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@FirstName", instructor.FirstName));
-                        cmd.Parameters.Add(new SqlParameter("@LastName", instructor.LastName));
-                        cmd.Parameters.Add(new SqlParameter("@SlackHandle", instructor.SlackHandle));
-                        cmd.Parameters.Add(new SqlParameter("@CohortId", instructor.CohortId));
-                        cmd.Parameters.Add(new SqlParameter("@Specialty", instructor.Specialty));
+                        cmd.CommandText = @"UPDATE Product
+                                                    SET DateAdded = @DateAdded,
+                                                        ProductTypeId = @ProductTypeId,
+                                                        CustomerId = @CustomerId,
+                                                        Price = @Price,
+                                                        Title = @Title,
+                                                        Description = @Description
+                                                    WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@DateAdded", product.DateAdded));
+                        cmd.Parameters.Add(new SqlParameter("@ProductTypeId", product.ProductTypeId));
+                        cmd.Parameters.Add(new SqlParameter("@CustomerId", product.CustomerId));
+                        cmd.Parameters.Add(new SqlParameter("@Price", product.Price));
+                        cmd.Parameters.Add(new SqlParameter("@Title", product.Title));
+                        cmd.Parameters.Add(new SqlParameter("@Description", product.Description));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
@@ -220,13 +203,13 @@ namespace StudentExercisesAPI.Controllers
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
                         }
-                        return BadRequest($"No instructor with Id of {id}");
+                        return BadRequest($"No Product with Id of {id}");
                     }
                 }
             }
             catch (Exception)
             {
-                if (!InstructorExists(id))
+                if (!ProductExists(id))
                 {
                     return NotFound();
                 }
@@ -247,7 +230,7 @@ namespace StudentExercisesAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM Instructor WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM Product WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
@@ -261,7 +244,7 @@ namespace StudentExercisesAPI.Controllers
             }
             catch (Exception)
             {
-                if (!InstructorExists(id))
+                if (!ProductExists(id))
                 {
                     return NotFound();
                 }
@@ -272,7 +255,7 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
-        private bool InstructorExists(int id)
+        private bool ProductExists(int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -280,9 +263,9 @@ namespace StudentExercisesAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT Id, FirstName, LastName, CohortId, Specialty
-                        FROM Instructor
-                        WHERE Id = @id";
+                                SELECT DateAdded, ProductTypeId, CustomerId, Price, Title, Description
+                                FROM Product
+                                WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
