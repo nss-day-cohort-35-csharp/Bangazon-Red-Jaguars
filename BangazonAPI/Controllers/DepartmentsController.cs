@@ -118,7 +118,7 @@ namespace BangazonAPI.Controllers
                 {
                     cmd.CommandText = @"INSERT INTO Department (Name, Budget)
                                         OUTPUT INSERTED.Id
-                                        VALUES (@name)";
+                                        VALUES (@name, @budget)";
                     cmd.Parameters.Add(new SqlParameter("@Name", department.Name));
                     cmd.Parameters.Add(new SqlParameter("@Budget", department.Budget));
 
