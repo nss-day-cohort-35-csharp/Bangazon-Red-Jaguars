@@ -42,7 +42,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT d.Id AS DeparmentId, 
+                    cmd.CommandText = @"SELECT d.Id AS DepartmentId, 
                                       d.Name AS DepartmentName,
                                       d.Budget as DepartmentBudget
                                       FROM Department AS d";
