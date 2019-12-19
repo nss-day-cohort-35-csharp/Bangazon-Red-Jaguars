@@ -17,7 +17,5 @@ namespace BangazonAPI.Models
         [Required]
         public int Budget { get; set; }
 
-        public Department Deparatment { get; set; }
-
     }
 }

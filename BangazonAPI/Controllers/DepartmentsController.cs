@@ -46,7 +46,7 @@ namespace BangazonAPI.Controllers
                                       d.Name AS DepartmentName,
                                       d.Budget as DepartmentBudget
                                       FROM Department AS d";
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    SqlDataReader reader = cmd.ExecuteReader(); 
                     List<Department> departments = new List<Department>();
               
 
