@@ -31,7 +31,7 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery]string sortBy)
+        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery]string sortBy, [FromQuery] bool? asc)
         {
             using (SqlConnection conn = Connection)
             {
@@ -60,6 +60,16 @@ namespace BangazonAPI.Controllers
                     if (sortBy == "popularity")
                     {
                         cmd.CommandText += " ORDER BY COUNT(op.ProductId) DESC";
+                    }
+
+                    if (sortBy == "price" && asc == true)
+                    {
+                        cmd.CommandText += " ORDER BY p.Price";
+                    }
+
+                    if (sortBy == "price" && asc == false)
+                    {
+                        cmd.CommandText += " ORDER BY p.Price DESC";
                     }
 
 

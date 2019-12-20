@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BangazonAPI.Models
 {
-    public class Student
+    public class Employee
     {
         /*
             CREATE TABLE Employee (
