@@ -73,7 +73,8 @@ namespace BangazonAPI.Controllers
                         "P.Id as ProductId, P.DateAdded as ProductDateAdded, P.ProductTypeId as ProductTypeId, P.CustomerId as ProductCustomerID, P.Price, P.Title, P.Description " +
                         "FROM [Order] " +
                         "LEFT JOIN OrderProduct ON [Order].Id = OrderProduct.OrderId " +
-                        "LEFT JOIN Product as P ON OrderProduct.ProductId = P.Id ";
+                        "LEFT JOIN Product as P ON OrderProduct.ProductId = P.Id " +
+                        "WHERE [Order].Id = @id"; 
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
@@ -92,22 +93,26 @@ namespace BangazonAPI.Controllers
                             wantedOrder.products = new List<Product>();
                         }
 
-                        int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
-
-                        if (wantedOrder.id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
+                        if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                         {
-                            Product newProduct = new Product
-                            {
-                                Id = currentProductID,
-                                CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                                Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                Title = reader.GetString(reader.GetOrdinal("Title")),
-                                Description = reader.GetString(reader.GetOrdinal("Description"))
-                            };
 
-                            wantedOrder.products.Add(newProduct);
+                            int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
+
+                            if (wantedOrder.id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
+                            {
+                                Product newProduct = new Product
+                                {
+                                    Id = currentProductID,
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description"))
+                                };
+
+                                wantedOrder.products.Add(newProduct);
+                            }
                         }
                     }
 
@@ -165,23 +170,26 @@ namespace BangazonAPI.Controllers
                             orders.Add(newOrder);
                         }
 
-                        int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
-                        foreach (Order orderInList in orders)
+                        if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                         {
-                            if (orderInList.id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
+                            int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
+                            foreach (Order orderInList in orders)
                             {
-                                Product newProduct = new Product
+                                if (orderInList.id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
                                 {
-                                    Id = currentProductID,
-                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                    Title = reader.GetString(reader.GetOrdinal("Title")),
-                                    Description = reader.GetString(reader.GetOrdinal("Description"))
-                                };
+                                    Product newProduct = new Product
+                                    {
+                                        Id = currentProductID,
+                                        CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                        ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                        DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                        Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                        Title = reader.GetString(reader.GetOrdinal("Title")),
+                                        Description = reader.GetString(reader.GetOrdinal("Description"))
+                                    };
 
-                                orderInList.products.Add(newProduct);
+                                    orderInList.products.Add(newProduct);
+                                }
                             }
                         }
                     }
@@ -226,18 +234,20 @@ namespace BangazonAPI.Controllers
                             wantedOrder.products = new List<Product>();
                         }
 
-                        Product newProduct = new Product
+                        if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                            CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                            ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                            DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                            Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                            Title = reader.GetString(reader.GetOrdinal("Title")),
-                            Description = reader.GetString(reader.GetOrdinal("Description"))
-                        };
-
-                        wantedOrder.products.Add(newProduct);
+                            Product newProduct = new Product
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                Title = reader.GetString(reader.GetOrdinal("Title")),
+                                Description = reader.GetString(reader.GetOrdinal("Description"))
+                            };
+                            wantedOrder.products.Add(newProduct);
+                        }
                     }
 
                     reader.Close();
@@ -257,7 +267,7 @@ namespace BangazonAPI.Controllers
                 {
                     cmd.CommandText = @"INSERT INTO [Order] (CustomerId, UserPaymentTypeId)
                                         OUTPUT INSERTED.Id
-                                        VALUES (@Customer";
+                                        VALUES (@Customer ";
                     if (order.userPaymentTypeId == 0)
                     {
                         cmd.CommandText += ", NULL)";
