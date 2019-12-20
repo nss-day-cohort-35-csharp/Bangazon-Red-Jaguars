@@ -197,39 +197,48 @@ namespace BangazonAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
+            if (!IsComputerAssigned(id))
+            {
             try
             {
-                using (SqlConnection conn = Connection)
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = conn.CreateCommand())
+                
+                    using (SqlConnection conn = Connection)
                     {
-                        cmd.CommandText = @"DELETE FROM Computer WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@id", id));
-
-                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                        if (rowsAffected > 0)
+                        conn.Open();
+                        using (SqlCommand cmd = conn.CreateCommand())
                         {
-                            return new StatusCodeResult(StatusCodes.Status204NoContent);
+                            cmd.CommandText = @"DELETE FROM Computer WHERE Id = @id";
+                            cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                            int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                            if (rowsAffected > 0)
+                            {
+                                return new StatusCodeResult(StatusCodes.Status204NoContent);
+                            }
+                            throw new Exception("No rows affected");
                         }
-                        throw new Exception("No rows affected");
                     }
-                }
+                
             }
             catch (Exception)
             {
                 if (!ComputerExists(id))
                 {
-                    return NotFound();
+                    return new StatusCodeResult(StatusCodes.Status403Forbidden);
                 }
                 else
                 {
                     throw;
                 }
             }
+            }
+                else
+            {
+                return new StatusCodeResult(StatusCodes.Status403Forbidden);
+            }
         }
 
-        private bool ComputerExists(int id)
+            private bool ComputerExists(int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -246,8 +255,26 @@ namespace BangazonAPI.Controllers
                     return reader.Read();
                 }
             }
+        }
 
-            
+        private bool IsComputerAssigned(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT FirstName 
+                        FROM Employee
+                        WHERE ComputerId = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+
+                    return reader.Read();
+                }
+            }
         }
     }
 }

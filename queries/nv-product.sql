@@ -18,4 +18,8 @@ SELECT c.Id, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model From Computer c
 LEFT JOIN Employee e ON e.ComputerId = c.Id
 WHERE e.Id IS NOT NULL OR c.DecomissionDate IS NOT NULL
 
+--Query for checking is PUTER IS ASSIGNED
+SELECT Id, FirstName from Employee
+WHERE ComputerId = 5
+
 
