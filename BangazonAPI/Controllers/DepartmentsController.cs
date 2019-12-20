@@ -84,42 +84,70 @@ namespace BangazonAPI.Controllers
                         d.Budget AS DepartmentBudget,
                         e.Id as EmployeeId,
                         e.FirstName AS EmployeeFirstName,
+                        e.LastName AS EmployeeLastName,
                         e.isSupervisor AS EmployeeSupervisor,
                         e.ComputerId AS EmployeeComputerId,
                         e.Email AS EmployeeEmail,
                         e.LastName AS EmmployeeLastName,
-                        e.DepartmentId AS EmployeeDepartmentId
+                        e.DepartmentId AS EmployeeDepartmentId,
+                        e.IsSupervisor AS EmployeeSupervisor,
+                        e.Email AS EmployeeEmail
                         FROM Department d
                         LEFT JOIN Employee e ON d.Id = e.DepartmentId
                         WHERE d.Id = 1";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
-                    List<Employee> employees = new List<Employee>();
+                    List<Department> departments = new List<Department>();
 
                     Department department = null;
 
-                    var holdingDepartmentId = reader.GetInt32(reader.GetOrdinal("Id"));
-
+                    
+                    //every row
                     while (reader.Read())
                     {
-                        department = new Department
+                        var departmentId = reader.GetInt32(reader.GetOrdinal("DepartmentId"));
+                        var departmentAlreadyAdded = departments.FirstOrDefault(d => d.Id == departmentId);
+
+                        if (departmentAlreadyAdded == null)
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Budget = reader.GetInt32(reader.GetOrdinal("Budget")),
-                            Name = reader.GetString(reader.GetOrdinal("Name"))
-                        };
+
+                            department = new Department
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
+                                Budget = reader.GetInt32(reader.GetOrdinal("DepartmentBudget")),
+                                Name = reader.GetString(reader.GetOrdinal("DepartmentName"))
+                            };
 
 
-                        var employee = new Employee()
+                            var employee = new Employee()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("EmployeeId")),
+                                FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("EmployeeLastName")),
+                                DepartmentId = reader.GetInt32(reader.GetOrdinal("EmployeeDepartmentId")),
+                                ComputerId = reader.GetInt32(reader.GetOrdinal("EmployeeComputerId")),
+                                IsSupervisor = reader.GetBoolean(reader.GetOrdinal("EmployeeSupervisor")),
+                                Email = reader.GetString(reader.GetOrdinal("EmployeeEmail"))
+                            };
+
+                            department.Employees.Add(employee);
+                            departments.Add(department);
+                        }
+                        else
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("EmployeeLastName")),
-                            DepartmentId = reader.GetInt32(reader.GetOrdinal("EmployeeDepartmentId"))
-                        };
+                            var employee = new Employee()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("EmployeeId")),
+                                FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("EmployeeLastName")),
+                                DepartmentId = reader.GetInt32(reader.GetOrdinal("EmployeeDepartmentId")),
+                                ComputerId = reader.GetInt32(reader.GetOrdinal("EmployeeComputerId")),
+                                IsSupervisor = reader.GetBoolean(reader.GetOrdinal("EmployeeSupervisor")),
+                                Email = reader.GetString(reader.GetOrdinal("EmployeeEmail"))
+                            };
 
-                        department.Employees.Add(employee);
-
+                            departmentAlreadyAdded.Employees.Add(employee);
+                        }
 
                     }
                     reader.Close();
