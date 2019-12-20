@@ -31,7 +31,7 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery]string sortBy, [FromQuery] bool? asc)
+        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery] bool? asc, [FromQuery] int? ItemsPerPage, [FromQuery] int? currentPage, [FromQuery]string sortBy = "recent")
         {
             using (SqlConnection conn = Connection)
             {
@@ -70,6 +70,17 @@ namespace BangazonAPI.Controllers
                     if (sortBy == "price" && asc == false)
                     {
                         cmd.CommandText += " ORDER BY p.Price DESC";
+                    }
+
+                    if (ItemsPerPage != null && currentPage != null)
+                    {
+                        //if (!string.IsNullOrWhiteSpace(sortBy))
+                        //{
+
+                            cmd.CommandText += " OFFSET @offset ROWS FETCH NEXT @items ROWS ONLY ";
+                            cmd.Parameters.Add(new SqlParameter(@"offset", (currentPage - 1) * ItemsPerPage));
+                            cmd.Parameters.Add(new SqlParameter(@"items", ItemsPerPage));
+                        //}
                     }
 
 
