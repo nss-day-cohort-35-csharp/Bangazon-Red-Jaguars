@@ -61,18 +61,18 @@ namespace BangazonAPI.Controllers
                     {
                         TrainingProgram trainingProgram = new TrainingProgram
                         {
-                            Id = reader.GetInt32( IdOrdinal ),
+                            Id = reader.GetInt32(IdOrdinal),
                             Name = reader.GetString(NameOrdinal),
                             StartDate = reader.GetDateTime(StartDateOrdinal),
                             EndDate = reader.GetDateTime(EndDateOrdinal),
                             MaxAttendees = reader.GetInt32(MaxAttendeesOrdinal)
                         };
 
-                        trainingPrograms.Add( trainingProgram );
+                        trainingPrograms.Add(trainingProgram);
                     }
                     reader.Close();
 
-                    return Ok( trainingPrograms );
+                    return Ok(trainingPrograms);
                 }
             }
         }
@@ -99,16 +99,16 @@ namespace BangazonAPI.Controllers
                     {
                         trainingProgram = new TrainingProgram
                         {
-                            Id = reader.GetInt32( reader.GetOrdinal("Id") ),
-                            Name = reader.GetString( reader.GetOrdinal("Name") ),
-                            StartDate = reader.GetDateTime( reader.GetOrdinal("StartDate") ),
-                            EndDate = reader.GetDateTime( reader.GetOrdinal("EndDate") ),
-                            MaxAttendees = reader.GetInt32( reader.GetOrdinal("MaxAttendees") )
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            StartDate = reader.GetDateTime(reader.GetOrdinal("StartDate")),
+                            EndDate = reader.GetDateTime(reader.GetOrdinal("EndDate")),
+                            MaxAttendees = reader.GetInt32(reader.GetOrdinal("MaxAttendees"))
                         };
                     }
                     reader.Close();
 
-                    return Ok( trainingProgram );
+                    return Ok(trainingProgram);
                 }
             }
         }
@@ -124,11 +124,11 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    if ( trainingProgram.StartDate < DateTime.Now )
+                    if (trainingProgram.StartDate < DateTime.Now)
                     {
                         return BadRequest("The start date must be in the future");
                     }
-                    else if ( trainingProgram.StartDate > trainingProgram.EndDate )
+                    else if (trainingProgram.StartDate > trainingProgram.EndDate)
                     {
                         return BadRequest("End date must be after the start date");
                     }
@@ -139,7 +139,7 @@ namespace BangazonAPI.Controllers
                                             VALUES (@name, @startDate, @endDate, @maxAttendees)";
 
                         cmd.Parameters.Add(new SqlParameter("@name", trainingProgram.Name));
-                        cmd.Parameters.Add(new SqlParameter("@startDate", trainingProgram.StartDate ));
+                        cmd.Parameters.Add(new SqlParameter("@startDate", trainingProgram.StartDate));
                         cmd.Parameters.Add(new SqlParameter("@endDate", trainingProgram.EndDate));
                         cmd.Parameters.Add(new SqlParameter("@MaxAttendees", trainingProgram.MaxAttendees));
 
@@ -147,6 +147,38 @@ namespace BangazonAPI.Controllers
                         trainingProgram.Id = newId;
 
                         return CreatedAtRoute("GetTrainingProgramById", new { id = newId }, trainingProgram);
+                    }
+                }
+            }
+        }
+
+        [HttpPost("{id}/employees")]
+        public async Task<IActionResult> Post([FromRoute] int id, [FromBody] Employee employee)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    bool exists = await EmployeeExist(employee.Id);
+                    if (exists)
+                    {
+                        cmd.CommandText = @"INSERT INTO EmployeeTraining (TrainingProgramId, EmployeeId)
+                                            OUTPUT INSERTED.id
+                                            VALUES (@trainigProgramId, @employeeId)";
+
+                        cmd.Parameters.Add(new SqlParameter("@trainigProgramId", id));
+                        cmd.Parameters.Add(new SqlParameter("@employeeId", employee.Id));
+
+                        int newId = (int)await cmd.ExecuteScalarAsync();
+                        return Ok(newId);
+
+                        //employeeTrainingProgram.Id = newId;
+                        //return CreatedAtRoute("GetEmployeeTrainingProgramById", new { id = newId }, employeeTrainingProgram);
+                    }
+                    else
+                    {
+                        return BadRequest($"No Employee with Id of {employee.Id}");
                     }
                 }
             }
@@ -235,6 +267,44 @@ namespace BangazonAPI.Controllers
             }
         }
 
+        [HttpDelete("{pId}/employees/{eId}")]
+        public async Task<IActionResult> Delete([FromRoute] int pId, [FromRoute] int eId)
+        {
+            try
+            {
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"DELETE FROM EmployeeTraining WHERE EmployeeId = @eId AND TrainingProgramId = @pId";
+                        cmd.Parameters.Add(new SqlParameter("@pId", pId));
+                        cmd.Parameters.Add(new SqlParameter("@eId", eId));
+
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        if (rowsAffected > 0)
+                        {
+                            return new StatusCodeResult(StatusCodes.Status204NoContent);
+                        }
+                        throw new Exception("No rows affected");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                bool exists = await EmployeeTrainingExists(pId,eId);
+                if (!exists)
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+
         private async Task<bool> TrainingProgramExists(int id)
         {
             using (SqlConnection conn = Connection)
@@ -253,5 +323,45 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
+        private async Task<bool> EmployeeTrainingExists(int pId, int eId)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT Id, EmployeeId, TrainingProgramId
+                        FROM EmpoyeeTraining
+                        WHERE EmployeeId = @eId AND TrainingProgramId = @pId";
+
+                    cmd.Parameters.Add(new SqlParameter("@pId", pId));
+                    cmd.Parameters.Add(new SqlParameter("@eId", eId));
+
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                    return reader.Read();
+                }
+            }
+        }
+
+        private async Task<bool> EmployeeExist(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+                        SELECT Id, FirstName, LastName, DepartmentId, Email, IsSupervisor, ComputerId
+                        FROM Employee
+                        WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                    return reader.Read();
+                }
+            }
+        }
+
     }
 }
