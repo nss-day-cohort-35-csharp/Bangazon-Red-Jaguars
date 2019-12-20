@@ -75,7 +75,7 @@ namespace BangazonAPI.Controllers
                     cmd.CommandText = @"
                         SELECT
                             Id, Name, Active
-                        FROM Exercise
+                        FROM PaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -97,7 +97,10 @@ namespace BangazonAPI.Controllers
                     {
                         return NotFound($"No payment found with ID of {id}");
                     };
-
+                    if (payment.Active == false)
+                    {
+                        return NotFound("payment isn't active");
+                    }
                     return Ok(payment);
                 }
             }
@@ -111,7 +114,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO Exercise (Name, Active)
+                    cmd.CommandText = @"INSERT INTO PaymentType (Name, Active)
                                         OUTPUT INSERTED.Id
                                         VALUES (@name, @active)";
                     cmd.Parameters.Add(new SqlParameter("@name", payment.Name));
@@ -134,7 +137,7 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE Payment
+                        cmd.CommandText = @"UPDATE PaymentType
                                             SET Name = @name,
                                                 Active = @active
                                             WHERE Id = @id";
@@ -174,7 +177,7 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM Payment WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM PaymentType WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();
@@ -208,7 +211,7 @@ namespace BangazonAPI.Controllers
                 {
                     cmd.CommandText = @"
                         SELECT Id, Name, Active
-                        FROM Payment
+                        FROM PaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
