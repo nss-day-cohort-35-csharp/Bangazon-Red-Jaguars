@@ -71,7 +71,7 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetDepartment")]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string include) 
         {
             using (SqlConnection conn = Connection)
             {
@@ -84,35 +84,41 @@ namespace BangazonAPI.Controllers
                         d.Budget AS DepartmentBudget,
                         e.Id as EmployeeId,
                         e.FirstName AS EmployeeFirstName,
+                        e.isSupervisor AS EmployeeSupervisor,
+                        e.ComputerId AS EmployeeComputerId,
+                        e.Email AS EmployeeEmail,
                         e.LastName AS EmmployeeLastName,
                         e.DepartmentId AS EmployeeDepartmentId
                         FROM Department d
-                        WHERE Id = @id
-                        LEFT JOIN Employee e AS d.Id = e.DepartmentId";
+                        LEFT JOIN Employee e ON d.Id = e.DepartmentId
+                        WHERE d.Id = 1";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Employee> employees = new List<Employee>();
 
                     Department department = null;
 
-                    if (reader.Read())
+                    var holdingDepartmentId = reader.GetInt32(reader.GetOrdinal("Id"));
+
+                    while (reader.Read())
                     {
                         department = new Department
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             Budget = reader.GetInt32(reader.GetOrdinal("Budget")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                        
-
-                         Employee = new Employee()
-                         {
-                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                             FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
-                             LastName = reader.GetString(reader.GetOrdinal)("EmployeeLastName"),
-                             DepartmentId = reader.GetInt32(reader.GetOrdinal)("EmployeeDepartmentId")
-                         }
-
+                            Name = reader.GetString(reader.GetOrdinal("Name"))
                         };
+
+
+                        var employee = new Employee()
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("EmployeeLastName")),
+                            DepartmentId = reader.GetInt32(reader.GetOrdinal("EmployeeDepartmentId"))
+                        };
+
+                        department.Employees.Add(employee);
 
 
                     }
