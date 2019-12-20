@@ -91,7 +91,7 @@ namespace BangazonAPI.Controllers
                         LEFT JOIN Employee AS d.Id = e.DepartmentId";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
-                    List<Employee> employee = new List<Employee>();
+                    List<Employee> employees = new List<Employee>();
 
                     Department department = null;
 
@@ -104,13 +104,13 @@ namespace BangazonAPI.Controllers
                             Name = reader.GetString(reader.GetOrdinal("Name")),
                         
 
-                         Employee = new Employee()
-                         {
-                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                             FirstName = reader.GetString(reader.GetOrdinal("EmployeeFirstName")),
-                             LastName = reader.GetString(reader.GetOrdinal)("EmployeeLastName"),
-                             DepartmentId = reader.GetString(reader.GetOrdinal)("EmployeeDepartmentId")
-                         }
+                         //Employee = new Employee()
+                         //{
+                         //    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                         //    FirstName = reader.GetString(reader.GetOrdinal("Firstname")),
+                         //    LastName = reader.GetString(reader.GetOrdinal)("EmployeeLastName"),
+                         //    DepartmentId = reader.GetInt32(reader.GetOrdinal)("EmployeeDepartmentId")
+                         //}
 
                         };
 
