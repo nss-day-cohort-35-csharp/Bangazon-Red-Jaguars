@@ -111,6 +111,7 @@ namespace BangazonAPI.Controllers
                         products.Add(product);
                     }
                     reader.Close();
+                    Response.Headers.Add("X-Total-Count", "20");
                     //from controllerbase interface - returns official json result with 200 status code
                     return Ok(products);
                 }
