@@ -20,5 +20,5 @@ namespace BangazonAPI.Models
         public string Employee { get; set; }
 
         public List<Employee> 
-    }
+    } 
 }
