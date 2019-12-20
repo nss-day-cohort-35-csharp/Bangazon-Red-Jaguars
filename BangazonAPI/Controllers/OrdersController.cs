@@ -158,5 +158,77 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
+
+        [HttpGet(Name = "GetOrdersWithCart")]
+        public async Task<IActionResult> GetOrdersWithCart([FromQuery]int customerId, bool cart)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT [Order].Id as OrderID, [Order].CustomerId as OrderCustomerID, [Order].UserPaymentTypeId as UserPaymentTypeId, " +
+                        "P.Id as ProductId, P.DateAdded as ProductDateAdded, P.ProductTypeId as ProductTypeId, P.CustomerId as ProductCustomerID, P.Price, P.Title, P.Description " +
+                        "FROM [Order] " +
+                        "LEFT JOIN Customer ON [Order].CustomerId = Customer.Id " +
+                        "LEFT JOIN Product as P ON Customer.Id = P.CustomerId ";
+                    if (!String.IsNullOrWhiteSpace(customerId.ToString()))
+                    {
+                        cmd.CommandText += "WHERE [Order].CustomerId = @customerId ";
+                        cmd.Parameters.Add(new SqlParameter("@customerId", customerId));
+                    }
+                    if (cart)
+                        cmd.CommandText += "AND [Order].UserPaymentTypeId IS NULL";
+                    else
+                        cmd.CommandText += "AND [Order].UserPaymentTypeId IS NOT NULL";
+
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                    Order wantedOrder = null;
+                    while (reader.Read())
+                    {
+                        if (wantedOrder == null)
+                        {
+                            wantedOrder = new Order();
+                            wantedOrder.id = reader.GetInt32(reader.GetOrdinal("OrderID"));
+                            wantedOrder.customerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId"));
+                            if (!reader.IsDBNull(reader.GetOrdinal("UserPaymentTypeId")))
+                            {
+                                wantedOrder.userPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId"));
+                            }
+                            wantedOrder.products = new List<Product>();
+                        }
+
+                        int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
+
+
+                        if (wantedOrder.customerId == reader.GetInt32(reader.GetOrdinal("ProductCustomerID")) && wantedOrder.products.FirstOrDefault(p => p.Id == currentProductID) == null)
+                        {
+                            Product newProduct = new Product
+                            {
+                                Id = currentProductID,
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                Title = reader.GetString(reader.GetOrdinal("Title")),
+                                Description = reader.GetString(reader.GetOrdinal("Description"))
+                            };
+
+                            wantedOrder.products.Add(newProduct);
+                        }
+
+                    }
+
+                    if (wantedOrder == null)
+                    {
+                        return NotFound();
+                    }
+
+                    reader.Close();
+
+                    return Ok(wantedOrder);
+                }
+            }
+        }
     }
 }
