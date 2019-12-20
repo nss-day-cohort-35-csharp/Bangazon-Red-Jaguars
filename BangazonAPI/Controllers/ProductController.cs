@@ -38,7 +38,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex FROM Product p
+                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex, overall_count = COUNT(*) OVER() FROM Product p
                                        
                                        LEFT JOIN OrderProduct op ON p.Id = op.ProductId
                                        GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded
@@ -89,11 +89,13 @@ namespace BangazonAPI.Controllers
 
                     List<Product> products = new List<Product>();
 
+                    var totalRows = 0;
+
 
                     while (reader.Read())
                     {
 
-
+                        totalRows = reader.GetInt32(reader.GetOrdinal("overall_count"));
                         Product product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -111,7 +113,7 @@ namespace BangazonAPI.Controllers
                         products.Add(product);
                     }
                     reader.Close();
-                    Response.Headers.Add("X-Total-Count", "20");
+                    Response.Headers.Add("X-Total-Count", totalRows.ToString());
                     //from controllerbase interface - returns official json result with 200 status code
                     return Ok(products);
                 }
