@@ -43,6 +43,6 @@ namespace BangazonAPI.Models
         [Required(ErrorMessage = "Computer Id is required")]
         public int ComputerId { get; set; }
 
-        public Computer Computer { get; set; }
+        public Computer? Computer { get; set; }
     }
 }
