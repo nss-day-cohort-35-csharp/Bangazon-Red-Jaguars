@@ -41,7 +41,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, Name, Active FROM PaymentType";
+                    cmd.CommandText = "SELECT Id, Name, Active FROM PaymentType WHERE Active = 1";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Payment> payments = new List<Payment>();
 
@@ -97,10 +97,7 @@ namespace BangazonAPI.Controllers
                     {
                         return NotFound($"No payment found with ID of {id}");
                     };
-                    if (payment.Active == false)
-                    {
-                        return NotFound("payment isn't active");
-                    }
+                    
                     return Ok(payment);
                 }
             }
@@ -177,8 +174,11 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM PaymentType WHERE Id = @id";
+                        cmd.CommandText = @"UPDATE PaymentType
+                                          Set Active = 0
+                                          WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
+
 
                         int rowsAffected = cmd.ExecuteNonQuery();
                         if (rowsAffected > 0)
@@ -191,6 +191,7 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
+
                 if (!PaymentExist(id))
                 {
                     return NotFound();
