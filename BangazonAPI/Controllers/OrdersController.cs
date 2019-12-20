@@ -32,7 +32,34 @@ namespace BangazonAPI.Controllers
         public async Task<IActionResult> Orders([FromQuery]int? customerId, bool cart)
         {
 
-            if(cart && customerId)
+            if(cart && !String.IsNullOrWhiteSpace(customerId.ToString()))
+            {
+                Order newOrder = await GetOrderWithCart(customerId);
+
+                if(newOrder == null)
+                {
+                    return NotFound("No results were shown.");
+                }
+
+                else
+                {
+                    return Ok(newOrder);
+                }
+            }
+
+            else
+            {
+                List<Order> orders = await GetOrdersWithoutCart(customerId);
+
+                if (orders.Count == 0)
+                {
+                    return NotFound("No results were found");
+                }
+                else
+                {
+                    return Ok(orders);
+                }
+            }
            
         }
 
@@ -169,7 +196,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        private async Task<Order> GetOrderWithCart(int customerId)
+        private async Task<Order> GetOrderWithCart(int? customerId)
         {
             using (SqlConnection conn = Connection)
             {
@@ -230,5 +257,7 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
+
+
     }
 }
