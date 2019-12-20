@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace BangazonAPI.Models
 {
-    public class PaymentType
+    public class Payment
     {
         [Required]
-        public int id { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        [StringLength(55)]
-        public int name { get; set; }
+        [StringLength(55, ErrorMessage = "Name character limit is 55. You've exceeded.")]
+        public string Name { get; set; }
 
         [Required]
-        public bool active { get; set; } = true;
+        public bool Active { get; set; } = true;
+
     }
 }

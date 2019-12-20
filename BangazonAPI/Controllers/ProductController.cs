@@ -31,14 +31,14 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery]string sortBy, [FromQuery] bool? asc)
+        public async Task<IActionResult> Get([FromQuery]string q, [FromQuery] bool? asc, [FromQuery] int? ItemsPerPage, [FromQuery] int? currentPage, [FromQuery]string sortBy = "recent")
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex FROM Product p
+                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex, overall_count = COUNT(*) OVER() FROM Product p
                                        
                                        LEFT JOIN OrderProduct op ON p.Id = op.ProductId
                                        GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded
@@ -72,17 +72,30 @@ namespace BangazonAPI.Controllers
                         cmd.CommandText += " ORDER BY p.Price DESC";
                     }
 
+                    if (ItemsPerPage != null && currentPage != null)
+                    {
+                        //if (!string.IsNullOrWhiteSpace(sortBy))
+                        //{
+
+                            cmd.CommandText += " OFFSET @offset ROWS FETCH NEXT @items ROWS ONLY ";
+                            cmd.Parameters.Add(new SqlParameter(@"offset", (currentPage - 1) * ItemsPerPage));
+                            cmd.Parameters.Add(new SqlParameter(@"items", ItemsPerPage));
+                        //}
+                    }
+
 
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                     List<Product> products = new List<Product>();
 
+                    var totalRows = 0;
+
 
                     while (reader.Read())
                     {
 
-
+                        totalRows = reader.GetInt32(reader.GetOrdinal("overall_count"));
                         Product product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -100,6 +113,7 @@ namespace BangazonAPI.Controllers
                         products.Add(product);
                     }
                     reader.Close();
+                    Response.Headers.Add("X-Total-Count", totalRows.ToString());
                     //from controllerbase interface - returns official json result with 200 status code
                     return Ok(products);
                 }
