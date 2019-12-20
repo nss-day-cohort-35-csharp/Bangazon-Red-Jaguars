@@ -30,6 +30,9 @@ namespace BangazonAPI.Controllers
             }
         }
 
+        /*
+        // The api/trainingPrograms route should only include training programs that are upcoming. It should not include any programs in the past
+        */
         [HttpGet]
         //[Route("GetAllTrainingPrograms")]
         public async Task<IActionResult> GetAllTrainingPrograms()
@@ -40,8 +43,11 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, [Name], StartDate, EndDate, MaxAttendees FROM TrainingProgram";
+                    cmd.CommandText = @"SELECT Id, [Name], StartDate, EndDate, MaxAttendees 
+                                        FROM TrainingProgram
+                                        WHERE StartDate >= @today";
 
+                    cmd.Parameters.Add(new SqlParameter("@today", DateTime.Now));
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
                     List<TrainingProgram> trainingPrograms = new List<TrainingProgram>();
 
@@ -107,6 +113,9 @@ namespace BangazonAPI.Controllers
             }
         }
 
+        /*
+        // When added a new training program, the start date must be in the future and the end date must be after the start date
+        */
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] TrainingProgram trainingProgram)
         {
@@ -115,24 +124,35 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO TrainingProgram ([Name], StartDate, EndDate, MaxAttendees)
-                                        OUTPUT INSERTED.id
-                                        VALUES (@name, @startDate, @endDate, @maxAttendees)";
+                    if ( trainingProgram.StartDate < DateTime.Now )
+                    {
+                        return BadRequest("The start date must be in the future");
+                    }
+                    else if ( trainingProgram.StartDate > trainingProgram.EndDate )
+                    {
+                        return BadRequest("End date must be after the start date");
+                    }
+                    else
+                    {
+                        cmd.CommandText = @"INSERT INTO TrainingProgram ([Name], StartDate, EndDate, MaxAttendees)
+                                            OUTPUT INSERTED.id
+                                            VALUES (@name, @startDate, @endDate, @maxAttendees)";
 
-                    cmd.Parameters.Add(new SqlParameter("@name", trainingProgram.Name));
-                    cmd.Parameters.Add(new SqlParameter("@startDate", trainingProgram.StartDate ));
-                    cmd.Parameters.Add(new SqlParameter("@endDate", trainingProgram.EndDate));
-                    cmd.Parameters.Add(new SqlParameter("@MaxAttendees", trainingProgram.MaxAttendees));
+                        cmd.Parameters.Add(new SqlParameter("@name", trainingProgram.Name));
+                        cmd.Parameters.Add(new SqlParameter("@startDate", trainingProgram.StartDate ));
+                        cmd.Parameters.Add(new SqlParameter("@endDate", trainingProgram.EndDate));
+                        cmd.Parameters.Add(new SqlParameter("@MaxAttendees", trainingProgram.MaxAttendees));
 
-                    int newId = (int)await cmd.ExecuteScalarAsync();
-                    trainingProgram.Id = newId;
+                        int newId = (int)await cmd.ExecuteScalarAsync();
+                        trainingProgram.Id = newId;
 
-                    return CreatedAtRoute("GetTrainingProgramById", new { id = newId }, trainingProgram);
+                        return CreatedAtRoute("GetTrainingProgramById", new { id = newId }, trainingProgram);
+                    }
                 }
             }
         }
 
-        /*[HttpPut("{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> Put([FromRoute] int id, [FromBody] TrainingProgram trainingProgram)
         {
             try
@@ -161,7 +181,7 @@ namespace BangazonAPI.Controllers
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
                         }
-                        throw new Exception("No rows affected");
+                        return BadRequest($"No Training Program with Id of {id}");
                     }
                 }
             }
@@ -213,7 +233,7 @@ namespace BangazonAPI.Controllers
                     throw;
                 }
             }
-        }*/
+        }
 
         private async Task<bool> TrainingProgramExists(int id)
         {
