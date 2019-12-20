@@ -16,6 +16,7 @@ namespace BangazonAPI.Models
                 MaxAttendees INTEGER NOT NULL);
         */
 
+        [Required]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Training Program Name is required")]
