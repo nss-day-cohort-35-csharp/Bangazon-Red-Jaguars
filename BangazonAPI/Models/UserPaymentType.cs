@@ -12,12 +12,12 @@ namespace BangazonAPI.Models
         public int id { get; set; }
         [Required]
         [StringLength(55)]
-        public string acctNumber { get; set; }
+        public string AcctNumber { get; set; }
         [Required]
-        public bool active { get; set; } = true;
+        public bool Active { get; set; } = true;
         [Required]
-        public int customerId { get; set; }
+        public int CustomerId { get; set; }
         [Required]
-        public int paymentTypeId { get; set; }
+        public int PaymentTypeId { get; set; }
     }
 }
