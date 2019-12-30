@@ -145,7 +145,7 @@ namespace BangazonAPI.Controllers
                                             SET Name = @acctNumber,
                                                 Active = @active
                                             WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@name", userPaymentType.AcctNumber));
+                        cmd.Parameters.Add(new SqlParameter("@acctNumber", userPaymentType.AcctNumber));
                         cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
