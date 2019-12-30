@@ -9,7 +9,7 @@ namespace BangazonAPI.Models
     public class UserPaymentType
     {
         [Required]
-        public int id { get; set; }
+        public int Id { get; set; }
         [Required]
         [StringLength(55)]
         public string AcctNumber { get; set; }
