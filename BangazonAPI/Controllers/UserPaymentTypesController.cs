@@ -117,7 +117,7 @@ namespace BangazonAPI.Controllers
                 {
                     cmd.CommandText = @"INSERT INTO UserPaymentType (AcctNumber, Active, CustomerId, PaymentTypeId)
                                         OUTPUT INSERTED.Id
-                                        VALUES (@name, @active)";
+                                        VALUES (@acctNumber, @active, @customerId, @paymentTypeId)";
                     cmd.Parameters.Add(new SqlParameter("@acctNumber", userPaymentType.AcctNumber));
                     cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
                     cmd.Parameters.Add(new SqlParameter("@customerId", userPaymentType.CustomerId));
@@ -132,7 +132,7 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] Payment payment)
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] UserPaymentType userPaymentType)
         {
             try
             {
@@ -141,12 +141,12 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE PaymentType
-                                            SET Name = @name,
+                        cmd.CommandText = @"UPDATE UserPaymentType
+                                            SET Name = @acctNumber,
                                                 Active = @active
                                             WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@name", payment.Name));
-                        cmd.Parameters.Add(new SqlParameter("@active", payment.Active));
+                        cmd.Parameters.Add(new SqlParameter("@name", userPaymentType.AcctNumber));
+                        cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();
@@ -160,7 +160,7 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
-                if (!PaymentExist(id))
+                if (!UserPaymentExist(id))
                 {
                     return NotFound();
                 }
@@ -181,7 +181,7 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE PaymentType
+                        cmd.CommandText = @"UPDATE UserPaymentType
                                           Set Active = 0
                                           WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
@@ -199,7 +199,7 @@ namespace BangazonAPI.Controllers
             catch (Exception)
             {
 
-                if (!PaymentExist(id))
+                if (!UserPaymentExist(id))
                 {
                     return NotFound();
                 }
@@ -210,7 +210,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        private bool PaymentExist(int id)
+        private bool UserPaymentExist(int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -218,8 +218,8 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT Id, Name, Active
-                        FROM PaymentType
+                        SELECT Id, AcctNumber, Active
+                        FROM UserPaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
