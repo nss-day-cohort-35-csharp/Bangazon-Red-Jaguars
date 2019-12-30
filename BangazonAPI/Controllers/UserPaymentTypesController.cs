@@ -91,7 +91,7 @@ namespace BangazonAPI.Controllers
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
                             PaymentTypeId = reader.GetInt32(reader.GetOrdinal("PaymentTypeId")),
-                            AcctNumber = reader.GetString(reader.GetOrdinal("AcctName")),
+                            AcctNumber = reader.GetString(reader.GetOrdinal("AcctNumber")),
                             Active = reader.GetBoolean(reader.GetOrdinal("Active"))
                         };
                     }
