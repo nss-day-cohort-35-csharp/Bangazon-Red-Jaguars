@@ -33,38 +33,6 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = "SELECT Id, AcctNumber, Active, CustomerId, PaymentTypeId FROM UserPaymentType WHERE Active = 1";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    List<UserPaymentType> userPaymentTypes = new List<UserPaymentType>();
-
-                    while (reader.Read())
-                    {
-                        UserPaymentType userPaymentType = new UserPaymentType
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
-                            PaymentTypeId = reader.GetInt32(reader.GetOrdinal("PaymentTypeId")),
-                            AcctNumber = reader.GetString(reader.GetOrdinal("AcctNumber")),                            
-                            Active = reader.GetBoolean(reader.GetOrdinal("Active"))
-                        };
-
-                        userPaymentTypes.Add(userPaymentType);
-                    }
-                    reader.Close();
-
-                    //Ok method is inheritated by the Controller method. The Ok method returns/wraps it up in a HTTP response with a 200 response code.
-                    return Ok(userPaymentTypes);
-                }
-            }
-        }
 
         [HttpGet("{id}", Name = "GetUserPayment")]
         public async Task<IActionResult> Get([FromRoute] int id)
