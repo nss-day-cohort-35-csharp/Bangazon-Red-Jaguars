@@ -18,7 +18,7 @@ namespace BangazonAPI.Models
         public string lastName { get; set; }
 
         [Required]
-        private DateTime createdDate { get; set; }
+        public DateTime createdDate { get; set; }
 
         [Required]
         public bool active { get; set; } = true;
