@@ -29,7 +29,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet] ///Get all Custer with optional customerID query
+        [HttpGet ("{id}", Name = "GetCustomer")] ///Get all Customer with optional customerID query
         public async Task<IActionResult> Customers([FromQuery]string? q)
         {
             using (SqlConnection conn = Connection)
@@ -45,7 +45,22 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@query", "%" + q + "%"));
                     }
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
-                    List<Order> orders = new List<Order>();
+                    List<Customer> customers = new List<Customer>();
+
+                    while (reader.Read())
+                    {
+
+                        int customerId = reader.GetInt32(reader.GetOrdinal("Id"));
+                        Customer customer = new Customer
+                        {
+                            id = 
+                            
+
+
+                        };
+                        products.Add(product);
+                    }
+                    reader.Close();
                 }
             }
         }
