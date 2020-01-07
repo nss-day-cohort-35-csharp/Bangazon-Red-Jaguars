@@ -89,7 +89,6 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@customerId", userPaymentType.CustomerId));
                     cmd.Parameters.Add(new SqlParameter("@paymentTypeId", userPaymentType.PaymentTypeId));
 
-
                     int newId = (int)await cmd.ExecuteScalarAsync();
                     userPaymentType.Id = newId;
                     return CreatedAtRoute("GetUserPayment", new { id = newId }, userPaymentType);
@@ -109,7 +108,7 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE UserPaymentType
                                             SET AcctNumber = @acctNumber,
-                                                Active = @active
+                                            Active = @active
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@acctNumber", userPaymentType.AcctNumber));
                         cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
@@ -154,6 +153,7 @@ namespace BangazonAPI.Controllers
 
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -164,7 +164,6 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
-
                 if (!UserPaymentExist(id))
                 {
                     return NotFound();
