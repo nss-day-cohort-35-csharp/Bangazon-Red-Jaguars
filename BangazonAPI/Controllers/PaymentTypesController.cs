@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.Data;
 using BangazonAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
@@ -42,7 +40,7 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = "SELECT Id, Name, Active FROM PaymentType WHERE Active = 1";
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
                     List<Payment> payments = new List<Payment>();
 
                     while (reader.Read())
@@ -78,7 +76,7 @@ namespace BangazonAPI.Controllers
                         FROM PaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                     Payment payment = null;
 
@@ -91,13 +89,14 @@ namespace BangazonAPI.Controllers
                             Active = reader.GetBoolean(reader.GetOrdinal("Active"))
                         };
                     }
+
                     reader.Close();
 
                     if (payment == null)
                     {
                         return NotFound($"No payment found with ID of {id}");
                     };
-                    
+
                     return Ok(payment);
                 }
             }
@@ -117,7 +116,7 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@name", payment.Name));
                     cmd.Parameters.Add(new SqlParameter("@active", payment.Active));
 
-                    int newId = (int)cmd.ExecuteScalar();
+                    int newId = (int)await cmd.ExecuteScalarAsync();
                     payment.Id = newId;
                     return CreatedAtRoute("GetPayment", new { id = newId }, payment);
                 }
@@ -136,13 +135,13 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE PaymentType
                                             SET Name = @name,
-                                                Active = @active
+                                            Active = @active
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@name", payment.Name));
                         cmd.Parameters.Add(new SqlParameter("@active", payment.Active));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -180,7 +179,8 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
