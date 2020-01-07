@@ -34,21 +34,10 @@ namespace BangazonAPI.Controllers
             [FromQuery] string firstName,
             [FromQuery] string lastName)
         {
-            /*if (include == "exercises")
-            {
-                var Employees = await GetEmployeesWithExercises();
-                return Ok(Employees);
-            }
-            else
-            {
-                var Employees = await GetAllEmployees( firstName, lastName );
-                return Ok(Employees);
-            }*/
-
             var Employees = await GetAllEmployees(firstName, lastName);
             return Ok(Employees);
         }
-
+        
         [HttpGet("{id}", Name = "GetEmployeeById")]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
@@ -121,15 +110,6 @@ namespace BangazonAPI.Controllers
                         cmd.CommandText += " AND LastName LIKE @lastName";
                         cmd.Parameters.Add(new SqlParameter("@lastName", "%" + lastName + "%"));
                     }
-
-                    /*if (orderBy == "asc")
-                    {
-                        cmd.CommandText += " ORDER BY LastName";
-                    }
-                    else if (orderBy == "desc")
-                    {
-                        cmd.CommandText += " ORDER BY LastName DESC";
-                    }*/
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
