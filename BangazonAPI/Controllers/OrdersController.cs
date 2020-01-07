@@ -295,6 +295,7 @@ namespace BangazonAPI.Controllers
 
                     cmd.Parameters.Add(new SqlParameter("@OrderId", order.id));
                     cmd.Parameters.Add(new SqlParameter("@ProductId", cusProduct.productId));
+                    await cmd.ExecuteScalarAsync();
                     return CreatedAtRoute("GetOrder", new { order.id }, order);
                 }
             }
