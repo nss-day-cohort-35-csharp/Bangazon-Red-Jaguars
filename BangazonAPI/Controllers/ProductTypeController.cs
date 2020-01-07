@@ -14,7 +14,6 @@ namespace BangazonAPI.Controllers
     [ApiController]
     public class ProductTypeController : ControllerBase
 
-    //pattern of read only field, typically of an interface. Dependancy injection.
     {
         private readonly IConfiguration _config;
 
@@ -41,7 +40,7 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = "SELECT Id, Name FROM ProductType";
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
                     List<ProductType> productTypes = new List<ProductType>();
 
                     while (reader.Read())
@@ -62,68 +61,73 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        //[HttpGet("{id}", Name = "GetProductType")]
-        //public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string include)
-        //{
-        //    using (SqlConnection conn = Connection)
-        //    {
-        //        conn.Open();
-        //        using (SqlCommand cmd = conn.CreateCommand())
-        //        {
-        //            if (include == "products")
-        //            {
-        //                cmd.CommandText = @"
-        //              SELECT pt.[Name] AS ProductTypeName, p.Id AS ProductId, p.DateAdded, p.ProductTypeId AS ProductTypeId, p.CustomerId, p.Price, p.Title, p.[Description]
-        //              FROM ProductType pt
-        //              LEFT JOIN Product p
-        //              ON pt.Id= p.ProductTypeId
-        //              WHERE pt.Id = @id";
-        //            }
-        //            else
-        //            {
-        //                cmd.CommandText = @"
-        //              SELECT [Name] AS ProductTypeName, Id AS ProductTypeId
-        //              FROM ProductType 
-        //              WHERE Id = @id";
-        //            }
-        //            cmd.Parameters.Add(new SqlParameter("@id", id));
+        [HttpGet("{id}", Name = "GetProductType")]
+        public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    if (include == "products")
+                    {
+                      cmd.CommandText = @"
+                      SELECT pt.[Name] AS ProductTypeName, 
+                      p.Id AS ProductId, 
+                      p.DateAdded, 
+                      p.ProductTypeId AS ProductTypeId, 
+                      p.CustomerId, 
+                      p.Price, p.Title, 
+                      p.[Description]
+                      FROM ProductType pt
+                      LEFT JOIN Product p
+                      ON pt.Id= p.ProductTypeId
+                      WHERE pt.Id = @id";
+                    }
+                    else
+                    {
+                        cmd.CommandText = @"
+                      SELECT [Name] AS ProductTypeName, Id AS ProductTypeId
+                      FROM ProductType 
+                      WHERE Id = @id";
+                    }
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
 
-        //            SqlDataReader reader = await cmd.ExecuteReaderAsync();
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-        //            ProductType productType = new ProductType();
+                    ProductType productType = new ProductType();
 
-        //            while (reader.Read())
-        //            {
-        //                productType.Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId"));
-        //                productType.Name = reader.GetString(reader.GetOrdinal("ProductTypeName"));
+                    while (reader.Read())
+                    {
+                        productType.Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId"));
+                        productType.Name = reader.GetString(reader.GetOrdinal("ProductTypeName"));
 
-        //                if (include == "products")
-        //                {
-        //                    if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
-        //                    {      
-        //                                Product product = new Product
-        //                                {
-        //                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-        //                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
-        //                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-        //                                    CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
-        //                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-        //                                    Title = reader.GetString(reader.GetOrdinal("Title")),
-        //                                    Description = reader.GetString(reader.GetOrdinal("Description"))
-        //                                };
+                        if (include == "products")
+                        {
+                            if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
+                            {
+                                Product product = new Product
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description"))
+                                };
 
-        //                                productType.Products.Add(product);
+                                productType.Products.Add(product);
 
-        //                    }
+                            }
+                        }
+                    }
 
-        //                }
-        //            }
-
-        //            reader.Close();
-        //            return Ok(productType);
-        //        }
-        //    }
-        //}
+                    reader.Close();
+                    return Ok(productType);
+                }
+            }
+        }
 
         [HttpGet("{id}")]
 
