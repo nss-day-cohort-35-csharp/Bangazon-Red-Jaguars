@@ -70,8 +70,10 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT Id, Name
-                        FROM ProductType
+                        SELECT pt.Id, pt.Name, p.Name, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
+                        FROM ProductType pt
+                        LEFT JOIN Product p
+                        ON p.ProductTypeId = pt.Id
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
@@ -84,6 +86,15 @@ namespace BangazonAPI.Controllers
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             Name = reader.GetString(reader.GetOrdinal("Name")),
+
+                            {
+                                Id = reader.GetString(reader.GetOrdinal("p.Id")),
+                                CustomerId = reader.GetString(reader.GetOrdinal("Id")),
+                                Price = reader.GetInt32(reader.GetOrdinal("Price")),
+                                Description = reader.GetString(reader.GetOrdinal("Description")),
+                                Title = reader.GetString(reader.GetOrdinal("Title")),
+                                DateAdded = reader.GetDateTime(reader.GetOrdinal("Date")),
+                            }
                         };
                     }
                     reader.Close();
