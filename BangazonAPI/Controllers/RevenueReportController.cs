@@ -37,10 +37,15 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT pt.Id AS ProductTypeId, SUM(p.Price) AS Price, pt.[Name] FROM ProductType pt
-                                        LEFT JOIN Product p ON pt.id = p.ProductTypeId
-                                        LEFT JOIN OrderProduct op ON op.ProductId = p.Id
-                                        LEFT JOIN [Order] o ON o.Id = op.OrderId
+                    cmd.CommandText = @" SELECT pt.Id AS ProductTypeId, ISNULL(SUM(sales.Price),0) AS Price, pt.[Name] FROM ProductType pt
+                                        LEFT JOIN 
+                                            (
+                                            SELECT p.Price, p.ProductTypeId FROM Product p 
+                                            JOIN OrderProduct op ON op.ProductId = p.Id
+                                            JOIN [Order] o ON o.Id = op.OrderId
+                                            WHERE o.UserPaymentTypeId is not null
+                                            ) 
+                                            Sales ON sales.ProductTypeId = pt.Id
                                         GROUP BY pt.Id, pt.[Name]";
 
                     
@@ -54,12 +59,9 @@ namespace BangazonAPI.Controllers
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
                             Name = reader.GetString(reader.GetOrdinal("Name")),
-                            TotalRevenue = 0
+                            TotalRevenue = reader.GetDecimal(reader.GetOrdinal("Price"))
                         };
-                        if (!reader.IsDBNull(reader.GetOrdinal("Price")))
-                        {
-                            productType.TotalRevenue += reader.GetDecimal(reader.GetOrdinal("Price"));
-                        }
+                        
                         revenueReport.ProductTypes.Add(productType);
                     }
                     reader.Close();
