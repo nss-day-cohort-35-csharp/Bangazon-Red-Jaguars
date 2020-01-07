@@ -8,9 +8,9 @@ namespace BangazonAPI.Models
 {
     public class CustomerProduct
     {
-        [Required]
+        [Required(ErrorMessage = "Error: A customer id is required.")]
         public int customerId { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Error: A product id is required.")]
         public int productId { get; set; }
     }
 }

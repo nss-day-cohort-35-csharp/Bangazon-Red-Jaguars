@@ -29,7 +29,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet] ///Get all Orders with optional customerID query
+        [HttpGet]
         public async Task<IActionResult> Orders([FromQuery]int? customerId, bool cart)
         {
             // If the bool cart is true and the customer id isn't null

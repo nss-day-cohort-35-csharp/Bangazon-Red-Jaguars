@@ -28,7 +28,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet] ///Get all Customer with optional customerID query
+        [HttpGet]
         public async Task<IActionResult> Customers([FromQuery]string? q)
         {
             using (SqlConnection conn = Connection)
@@ -38,13 +38,13 @@ namespace BangazonAPI.Controllers
                 {
                     cmd.CommandText = "SELECT Customer.Id, Customer.FirstName, Customer.LastName, Customer.CreatedDate, Customer.Active, Customer.Address, Customer.City, Customer.State, Customer.Email, Customer.Phone " +
                     "FROM Customer ";
-                    if (!String.IsNullOrWhiteSpace(q))
+                    if (!String.IsNullOrWhiteSpace(q)) // If there is a query, match it with any of the following columns
                     {
                         cmd.CommandText += "WHERE Active = 1 and (FirstName LIKE @query or LastName LIKE @query or Address LIKE @query or City LIKE @query or State LIKE @query or Email LIKE @query or Phone LIKE @query)";
                         cmd.Parameters.Add(new SqlParameter("@query", "%" + q + "%"));
                     }
-
-                    else{
+                    else
+                    {
                         cmd.CommandText += "WHERE Active = 1";
                     }
 
@@ -129,17 +129,15 @@ namespace BangazonAPI.Controllers
                             };
                         }
 
-                        if (include == "products")
+                        if (include == "products") // If products is in the url as included
                         {
                             if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                             {
-                                int currentProductID = reader.GetInt32(reader.GetOrdinal("ProductId"));
-
                                 if (wantedCustomer.id == reader.GetInt32(reader.GetOrdinal("ProductCustomerId")))
                                 {
                                     Product newProduct = new Product
                                     {
-                                        Id = currentProductID,
+                                        Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
                                         CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
                                         ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
                                         DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
