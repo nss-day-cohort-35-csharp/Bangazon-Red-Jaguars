@@ -82,6 +82,10 @@ namespace BangazonAPI.Controllers
                     }
                     reader.Close();
 
+                    if (employee == null)
+                    {
+                        return NotFound($"No Employee found with the ID of {id}");
+                    }
                     return Ok(employee);
                 }
             }
