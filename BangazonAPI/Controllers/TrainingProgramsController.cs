@@ -106,6 +106,11 @@ namespace BangazonAPI.Controllers
                     }
                     reader.Close();
 
+                    if (trainingProgram == null)
+                    {
+                        return NotFound($"No Training Program found with the ID of {id}");
+                    }
+
                     return Ok(trainingProgram);
                 }
             }
