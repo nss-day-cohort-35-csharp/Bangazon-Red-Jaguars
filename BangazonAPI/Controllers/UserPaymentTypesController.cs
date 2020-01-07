@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.Data;
 using BangazonAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
@@ -43,12 +40,13 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT
-                            Id, AcctNumber, Active, CustomerId, PaymentTypeId
+                        SELECT Id, AcctNumber, Active, CustomerId, PaymentTypeId
                         FROM UserPaymentType
                         WHERE Id = @id";
+
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                     UserPaymentType userPaymentType = null;
 
@@ -83,7 +81,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"INSERT INTO UserPaymentType (AcctNumber, Active, CustomerId, PaymentTypeId)
+                    cmd.CommandText = @"INSERT INTO UserPaymentType (AcctNumber, Active, CustomerId, PaymentTypeId
                                         OUTPUT INSERTED.Id
                                         VALUES (@acctNumber, @active, @customerId, @paymentTypeId)";
                     cmd.Parameters.Add(new SqlParameter("@acctNumber", userPaymentType.AcctNumber));
@@ -92,7 +90,7 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@paymentTypeId", userPaymentType.PaymentTypeId));
 
 
-                    int newId = (int)cmd.ExecuteScalar();
+                    int newId = (int)await cmd.ExecuteScalarAsync();
                     userPaymentType.Id = newId;
                     return CreatedAtRoute("GetUserPayment", new { id = newId }, userPaymentType);
                 }
@@ -117,7 +115,7 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -155,7 +153,7 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
