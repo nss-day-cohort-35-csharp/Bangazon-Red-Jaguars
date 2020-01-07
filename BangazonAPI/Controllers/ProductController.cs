@@ -38,11 +38,9 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex, overall_count = COUNT(*) OVER() FROM Product p
-                                       
+                    cmd.CommandText = @"SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularityIndex, overall_count = COUNT(*) OVER() FROM Product p                                      
                                        LEFT JOIN OrderProduct op ON p.Id = op.ProductId
-                                       GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded
-                                       
+                                       GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded                                       
                                        HAVING 1=1";
 
                     if (!string.IsNullOrWhiteSpace(q))
@@ -53,8 +51,7 @@ namespace BangazonAPI.Controllers
 
                     if (sortBy == "recent")
                     {
-                        cmd.CommandText += " ORDER BY p.DateAdded DESC";
-                        
+                        cmd.CommandText += " ORDER BY p.DateAdded DESC";                       
                     }
 
                     if (sortBy == "popularity")
@@ -74,16 +71,10 @@ namespace BangazonAPI.Controllers
 
                     if (ItemsPerPage != null && currentPage != null)
                     {
-                        //if (!string.IsNullOrWhiteSpace(sortBy))
-                        //{
-
                             cmd.CommandText += " OFFSET @offset ROWS FETCH NEXT @items ROWS ONLY ";
                             cmd.Parameters.Add(new SqlParameter(@"offset", (currentPage - 1) * ItemsPerPage));
-                            cmd.Parameters.Add(new SqlParameter(@"items", ItemsPerPage));
-                        //}
+                            cmd.Parameters.Add(new SqlParameter(@"items", ItemsPerPage));                        
                     }
-
-
 
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
@@ -91,30 +82,25 @@ namespace BangazonAPI.Controllers
 
                     var totalRows = 0;
 
-
                     while (reader.Read())
                     {
-
                         totalRows = reader.GetInt32(reader.GetOrdinal("overall_count"));
                         Product product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                           // ProductType = reader.GetString(reader.GetOrdinal("ProductType")),
                             ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
                             CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
                             Price = reader.GetDecimal(reader.GetOrdinal("Price")),
                             Description = reader.GetString(reader.GetOrdinal("Description")),
                             Title = reader.GetString(reader.GetOrdinal("Title")),
-                            DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
-                           // PopularityIndex = reader.GetInt32(reader.GetOrdinal("PopularityIndex"))
-
-
+                            DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),                        
                         };
                         products.Add(product);
                     }
                     reader.Close();
+
                     Response.Headers.Add("X-Total-Count", totalRows.ToString());
-                    //from controllerbase interface - returns official json result with 200 status code
+
                     return Ok(products);
                 }
             }
@@ -129,13 +115,10 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-                        SELECT  p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded FROM Product p
-                                       
-                                       
-                                       
+                    cmd.CommandText = @"SELECT p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded FROM Product p 
                                         WHERE p.Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
+
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                     Product product = null;
@@ -145,17 +128,12 @@ namespace BangazonAPI.Controllers
                         product = new Product
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                           // ProductType = reader.GetString(reader.GetOrdinal("ProductType")),
                             ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
                             CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
                             Price = reader.GetDecimal(reader.GetOrdinal("Price")),
                             Description = reader.GetString(reader.GetOrdinal("Description")),
                             Title = reader.GetString(reader.GetOrdinal("Title")),
                             DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
-                            //PopularityIndex = reader.GetInt32(reader.GetOrdinal("PopularityIndex"))
-
-
-                        
                          };
                     }
                     reader.Close();
@@ -178,8 +156,8 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"INSERT INTO Product (DateAdded, ProductTypeId, CustomerId, Price, Title, Description)
-                                                OUTPUT INSERTED.Id
-                                                VALUES (@DateAdded, @ProductTypeId, @CustomerId, @Price, @Title, @Description)";
+                                        OUTPUT INSERTED.Id
+                                        VALUES (@DateAdded, @ProductTypeId, @CustomerId, @Price, @Title, @Description)";
                     cmd.Parameters.Add(new SqlParameter("@DateAdded", DateTime.Now));
                     cmd.Parameters.Add(new SqlParameter("@ProductTypeId", product.ProductTypeId));
                     cmd.Parameters.Add(new SqlParameter("@CustomerId", product.CustomerId));
@@ -188,7 +166,9 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@Description", product.Description));
 
                     int newId = (int)await cmd.ExecuteScalarAsync();
+
                     product.Id = newId;
+
                     return CreatedAtRoute("GetProduct", new { id = newId }, product);
                 }
             }
@@ -221,6 +201,7 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -256,6 +237,7 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -291,6 +273,7 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     SqlDataReader reader = cmd.ExecuteReader();
+
                     return reader.Read();
                 }
             }
