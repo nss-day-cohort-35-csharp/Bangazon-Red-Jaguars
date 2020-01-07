@@ -37,10 +37,11 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT p.Id, pt.Id AS ProductTypeId, p.Price, p.Title, pt.[Name], op.OrderId AS OrderId, o.UserPaymentTypeId AS PaymentType FROM ProductType pt
+                    cmd.CommandText = @"SELECT pt.Id AS ProductTypeId, SUM(p.Price) AS Price, pt.[Name] FROM ProductType pt
                                         LEFT JOIN Product p ON pt.id = p.ProductTypeId
                                         LEFT JOIN OrderProduct op ON op.ProductId = p.Id
-                                        LEFT JOIN [Order] o ON o.Id = op.OrderId";
+                                        LEFT JOIN [Order] o ON o.Id = op.OrderId
+                                        GROUP BY pt.Id, pt.[Name]";
 
                     
                     SqlDataReader reader = await cmd.ExecuteReaderAsync();
@@ -49,31 +50,17 @@ namespace BangazonAPI.Controllers
 
                     while (reader.Read())
                     {
-                        var typeId = reader.GetInt32(reader.GetOrdinal("productTypeId"));
-                        var typeAlreadyAdded = revenueReport.ProductTypes.FirstOrDefault(p => p.Id == typeId);
-                        
-                        if(typeAlreadyAdded == null)
+                        ProductType productType = new ProductType
                         {
-                            ProductType productType = new ProductType
-                            {
-                                Id = typeId,
-                                Name = reader.GetString(reader.GetOrdinal("Name")),
-                                TotalRevenue = 0
-                            };
-                            if (!reader.IsDBNull(reader.GetOrdinal("PaymentType")))
-                            {
-                                productType.TotalRevenue += reader.GetDecimal(reader.GetOrdinal("Price"));
-                            }
-
-                            revenueReport.ProductTypes.Add(productType);
-                        }
-                        else
+                            Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            TotalRevenue = 0
+                        };
+                        if (!reader.IsDBNull(reader.GetOrdinal("Price")))
                         {
-                            if (!reader.IsDBNull(reader.GetOrdinal("PaymentType")))
-                            {
-                                typeAlreadyAdded.TotalRevenue += reader.GetDecimal(reader.GetOrdinal("Price"));
-                            }
+                            productType.TotalRevenue += reader.GetDecimal(reader.GetOrdinal("Price"));
                         }
+                        revenueReport.ProductTypes.Add(productType);
                     }
                     reader.Close();
                     return Ok(revenueReport);
