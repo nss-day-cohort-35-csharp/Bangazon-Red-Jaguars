@@ -34,9 +34,7 @@ namespace BangazonAPI.Controllers
         // The api/trainingPrograms route should only include training programs that are upcoming. It should not include any programs in the past
         */
         [HttpGet]
-        //[Route("GetAllTrainingPrograms")]
         public async Task<IActionResult> GetAllTrainingPrograms()
-        //public async Task<List<TrainingProgram>> GetAllTrainingPrograms()
         {
             using (SqlConnection conn = Connection)
             {
@@ -108,6 +106,11 @@ namespace BangazonAPI.Controllers
                     }
                     reader.Close();
 
+                    if (trainingProgram == null)
+                    {
+                        return NotFound($"No Training Program found with the ID of {id}");
+                    }
+
                     return Ok(trainingProgram);
                 }
             }
@@ -171,10 +174,8 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@employeeId", employee.Id));
 
                         int newId = (int)await cmd.ExecuteScalarAsync();
-                        return Ok(newId);
 
-                        //employeeTrainingProgram.Id = newId;
-                        //return CreatedAtRoute("GetEmployeeTrainingProgramById", new { id = newId }, employeeTrainingProgram);
+                        return Ok(newId);
                     }
                     else
                     {
@@ -292,7 +293,7 @@ namespace BangazonAPI.Controllers
             }
             catch (Exception)
             {
-                bool exists = await EmployeeTrainingExists(pId,eId);
+                bool exists = await EmployeeTrainingExists(pId, eId);
                 if (!exists)
                 {
                     return NotFound();
@@ -303,7 +304,6 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
-
 
         private async Task<bool> TrainingProgramExists(int id)
         {
@@ -323,6 +323,7 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
+
         private async Task<bool> EmployeeTrainingExists(int pId, int eId)
         {
             using (SqlConnection conn = Connection)
@@ -362,6 +363,5 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
-
     }
 }

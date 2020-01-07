@@ -7,15 +7,6 @@ namespace BangazonAPI.Models
 {
     public class TrainingProgram
     {
-        /*
-            CREATE TABLE TrainingProgram (
-                Id INTEGER NOT NULL PRIMARY KEY IDENTITY,
-                [Name] VARCHAR(255) NOT NULL,
-                StartDate DATETIME NOT NULL,
-                EndDate DATETIME NOT NULL,
-                MaxAttendees INTEGER NOT NULL);
-        */
-
         [Required]
         public int Id { get; set; }
 

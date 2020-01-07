@@ -7,19 +7,7 @@ namespace BangazonAPI.Models
 {
     public class Employee
     {
-        /*
-            CREATE TABLE Employee (
-	            Id INTEGER NOT NULL PRIMARY KEY IDENTITY,
-	            FirstName VARCHAR(55) NOT NULL,
-	            LastName VARCHAR(55) NOT NULL,
-	            DepartmentId INTEGER NOT NULL,
-	            Email VARCHAR(55) NOT NULL,
-	            IsSupervisor BIT NOT NULL DEFAULT(0),
-	            ComputerId INTEGER NOT NULL,
-                CONSTRAINT FK_EmployeeDepartment FOREIGN KEY(DepartmentId) REFERENCES Department(Id),
-	            CONSTRAINT FK_EmployeeComputer FOREIGN KEY (ComputerId) REFERENCES Computer(Id));
-        */
-
+        [Required]
         public int Id { get; set; }
 
         [Required(ErrorMessage = "First Name is required")]
