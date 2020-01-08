@@ -133,7 +133,7 @@ namespace BangazonAPI.Controllers
         //    }
         //}
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetProductType")]
 
         public async Task<IActionResult> GetProductTypeById(int id, string include)
         {
