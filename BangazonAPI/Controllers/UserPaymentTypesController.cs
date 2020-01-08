@@ -15,11 +15,9 @@ namespace BangazonAPI.Controllers
     [ApiController]
     public class UserPaymentTypesController : ControllerBase
 
-    //pattern of read only field, typically of an interface. Dependancy injection.
     {
         private readonly IConfiguration _config;
 
-        //the constructor, setting the field
         public UserPaymentTypesController(IConfiguration config)
         {
             _config = config;
@@ -43,12 +41,15 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT
-                            Id, AcctNumber, Active, CustomerId, PaymentTypeId
+                        SELECT Id, 
+                        AcctNumber, 
+                        Active, 
+                        CustomerId, 
+                        PaymentTypeId
                         FROM UserPaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                     UserPaymentType userPaymentType = null;
 
@@ -92,7 +93,7 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@paymentTypeId", userPaymentType.PaymentTypeId));
 
 
-                    int newId = (int)cmd.ExecuteScalar();
+                    int newId = (int)await cmd.ExecuteScalarAsync();
                     userPaymentType.Id = newId;
                     return CreatedAtRoute("GetUserPayment", new { id = newId }, userPaymentType);
                 }
@@ -111,13 +112,13 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE UserPaymentType
                                             SET AcctNumber = @acctNumber,
-                                                Active = @active
+                                            Active = @active
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@acctNumber", userPaymentType.AcctNumber));
                         cmd.Parameters.Add(new SqlParameter("@active", userPaymentType.Active));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -155,7 +156,7 @@ namespace BangazonAPI.Controllers
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
