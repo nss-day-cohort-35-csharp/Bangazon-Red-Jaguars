@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BangazonAPI.Models
 {
@@ -10,14 +6,18 @@ namespace BangazonAPI.Models
     {
         [Required]
         public int Id { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Account Number is required. Maximum number of 55 characters.")]
         [StringLength(55)]
         public string AcctNumber { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Active Status of true/false is required.")]
         public bool Active { get; set; } = true;
-        [Required]
+
+        [Required(ErrorMessage = "Customer ID is required.")]
         public int CustomerId { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Payment Type ID is required.")]
         public int PaymentTypeId { get; set; }
     }
 }

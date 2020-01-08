@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 
 namespace BangazonAPI.Models
@@ -13,5 +14,7 @@ namespace BangazonAPI.Models
         public string Name { get; set; }
 
         public decimal TotalRevenue { get; set; }
+
+        public List<Product> Products { get; set; } = new List<Product>();
     }
 }
