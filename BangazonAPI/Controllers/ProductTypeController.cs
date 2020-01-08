@@ -61,73 +61,77 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        [HttpGet("{id}", Name = "GetProductType")]
-        public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string include)
-        {
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    if (include == "products")
-                    {
-                      cmd.CommandText = @"
-                      SELECT pt.[Name] AS ProductTypeName, 
-                      p.Id AS ProductId, 
-                      p.DateAdded, 
-                      p.ProductTypeId AS ProductTypeId, 
-                      p.CustomerId, 
-                      p.Price, p.Title, 
-                      p.[Description]
-                      FROM ProductType pt
-                      LEFT JOIN Product p
-                      ON pt.Id= p.ProductTypeId
-                      WHERE pt.Id = @id";
-                    }
-                    else
-                    {
-                        cmd.CommandText = @"
-                      SELECT [Name] AS ProductTypeName, Id AS ProductTypeId
-                      FROM ProductType 
-                      WHERE Id = @id";
-                    }
-                    cmd.Parameters.Add(new SqlParameter("@id", id));
+        //[HttpGet("{id}", Name = "GetProductType")]
+        //public async Task<IActionResult> Get([FromRoute] int id, [FromQuery] string include)
+        //{
+        //    using (SqlConnection conn = Connection)
+        //    {
+        //        conn.Open();
+        //        using (SqlCommand cmd = conn.CreateCommand())
+        //        {
+        //            if (include == "products")
+        //            {
+        //              //SELECT * ProductType
+        //                    //for each product type ID in the loop, select all from product where producttypeID = @id. 
+        //                    //make an object of arrays and store it in memory and spit it out. when u get the return result in for loop, put it insome object in a bunch of arrays (in a list with a name value pair)
+        //                    //create a name value pair name of product type value = products within it
+        //              cmd.CommandText = @"
+        //              SELECT pt.[Name] AS ProductTypeName, 
+        //              p.Id AS ProductId, 
+        //              p.DateAdded, 
+        //              p.ProductTypeId AS ProductTypeId, 
+        //              p.CustomerId, 
+        //              p.Price, p.Title, 
+        //              p.[Description]
+        //              FROM ProductType pt
+        //              LEFT JOIN Product p
+        //              ON pt.Id = p.ProductTypeId
+        //              WHERE pt.Id = @id";
+        //            }
+        //            else
+        //            {
+        //              cmd.CommandText = @"
+        //              SELECT [Name] AS ProductTypeName, Id AS ProductTypeId
+        //              FROM ProductType 
+        //              WHERE Id = @id";
+        //            }
+        //            cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
+        //            SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
-                    ProductType productType = new ProductType();
+        //            ProductType productType = new ProductType();
 
-                    while (reader.Read())
-                    {
-                        productType.Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId"));
-                        productType.Name = reader.GetString(reader.GetOrdinal("ProductTypeName"));
+        //            while (reader.Read())
+        //            {
+        //                productType.Id = reader.GetInt32(reader.GetOrdinal("ProductTypeId"));
+        //                productType.Name = reader.GetString(reader.GetOrdinal("ProductTypeName"));
 
-                        if (include == "products")
-                        {
-                            if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
-                            {
-                                Product product = new Product
-                                {
-                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
-                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                    CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
-                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                    Title = reader.GetString(reader.GetOrdinal("Title")),
-                                    Description = reader.GetString(reader.GetOrdinal("Description"))
-                                };
+        //                if (include == "products")
+        //                {
+        //                    if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
+        //                    {
+        //                        Product product = new Product
+        //                        {
+        //                            Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+        //                            DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+        //                            ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+        //                            CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+        //                            Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+        //                            Title = reader.GetString(reader.GetOrdinal("Title")),
+        //                            Description = reader.GetString(reader.GetOrdinal("Description"))
+        //                        };
 
-                                productType.Products.Add(product);
+        //                        productType.Products.Add(product);
 
-                            }
-                        }
-                    }
+        //                    }
+        //                }
+        //            }
 
-                    reader.Close();
-                    return Ok(productType);
-                }
-            }
-        }
+        //            reader.Close();
+        //            return Ok(productType);
+        //        }
+        //    }
+        //}
 
         [HttpGet("{id}")]
 
@@ -140,13 +144,24 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"SELECT pt.Id AS ProductTypeId, pt.[Name] AS ProductTypeName, p.Id AS ProductId, 
-                                        p.DateAdded AS ProductDateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.[Description]
-                                        FROM ProductType pt LEFT JOIN Product p ON
+                        cmd.CommandText = @"SELECT pt.Id AS ProductTypeId, 
+                                        pt.[Name] AS ProductTypeName, 
+                                        p.Id AS ProductId, 
+                                        p.DateAdded AS ProductDateAdded, 
+                                        p.ProductTypeId, 
+                                        p.CustomerId, 
+                                        p.Price, 
+                                        p.Title, 
+                                        p.[Description]
+                                        FROM ProductType pt 
+                                        LEFT JOIN Product p ON
                                         pt.Id = p.ProductTypeId
                                         WHERE pt.Id = @id";
+
                         cmd.Parameters.Add(new SqlParameter("@id", id));
+
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
+
                         List<ProductType> productTypes = new List<ProductType>();
 
                         while (reader.Read())
@@ -162,15 +177,14 @@ namespace BangazonAPI.Controllers
                                     Id = productTypeId,
                                     Name = reader.GetString(reader.GetOrdinal("ProductTypeName")),
                                     Products = new List<Product>()
-
                                 };
+
                                 productTypes.Add(productType);
 
                                 {
                                     if (hasProduct)
                                     {
                                         Product product = new Product()
-
                                         {
                                             Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
                                             DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
@@ -179,12 +193,10 @@ namespace BangazonAPI.Controllers
                                             Price = reader.GetDecimal(reader.GetOrdinal("Price")),
                                             Title = reader.GetString(reader.GetOrdinal("Title")),
                                             Description = reader.GetString(reader.GetOrdinal("Description")),
-
                                         };
                                         productType.Products.Add(product);
                                     }
                                 }
-
                             }
                             else
                             {
@@ -202,16 +214,12 @@ namespace BangazonAPI.Controllers
                                     };
                                     productTypeAlreadyAdded.Products.Add(product);
                                 }
-
-
                             }
                         }
                         reader.Close();
                         return Ok(productTypes);
                     }
                 }
-
-
             }
             else
             {
@@ -220,8 +228,13 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT Id AS ProductId, Name AS ProductName FROM ProductType WHERE Id = @id";
+                        cmd.CommandText = @"SELECT Id AS ProductId, 
+                                           Name AS ProductName  
+                                           FROM ProductType 
+                                           WHERE Id = @id";
+
                         cmd.Parameters.Add(new SqlParameter("@id", id));
+
                         SqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                         ProductType productType = null;
@@ -232,20 +245,19 @@ namespace BangazonAPI.Controllers
                             {
                                 Id = id,
                                 Name = reader.GetString(reader.GetOrdinal("ProductName"))
-
                             };
                         }
+
                         reader.Close();
+
                         if (productType == null)
                         {
                             return NotFound($"No product type found with the id {id}");
                         }
                         return Ok(productType);
-
                     }
                 }
             }
-
         }
 
 
