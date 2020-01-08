@@ -15,11 +15,9 @@ namespace BangazonAPI.Controllers
     [ApiController]
     public class PaymentTypesController : ControllerBase
 
-    //pattern of read only field, typically of an interface. Dependancy injection.
     {
         private readonly IConfiguration _config;
 
-        //the constructor, setting the field
         public PaymentTypesController(IConfiguration config)
         {
             _config = config;
@@ -58,7 +56,6 @@ namespace BangazonAPI.Controllers
                     }
                     reader.Close();
 
-                    //Ok method is inheritated by the Controller method. The Ok method returns/wraps it up in a HTTP response with a 200 response code.
                     return Ok(payments);
                 }
             }
@@ -73,8 +70,9 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT
-                            Id, Name, Active
+                        SELECT Id, 
+                        Name, 
+                        Active
                         FROM PaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
@@ -136,7 +134,7 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE PaymentType
                                             SET Name = @name,
-                                                Active = @active
+                                            Active = @active
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@name", payment.Name));
                         cmd.Parameters.Add(new SqlParameter("@active", payment.Active));
@@ -179,8 +177,8 @@ namespace BangazonAPI.Controllers
                                           WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -211,7 +209,9 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT Id, Name, Active
+                        SELECT Id, 
+                        Name, 
+                        Active
                         FROM PaymentType
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
