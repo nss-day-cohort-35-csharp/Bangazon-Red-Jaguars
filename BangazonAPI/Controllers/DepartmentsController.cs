@@ -4,9 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.Data;
 using Microsoft.AspNetCore.Http;
-using System.Data.SqlClient;
 using Microsoft.Data.SqlClient;
 using BangazonAPI.Models;
 
@@ -16,11 +14,9 @@ namespace BangazonAPI.Controllers
     [ApiController]
     public class DepartmentsController : ControllerBase
 
-    //pattern of read only field, typically of an interface. Dependancy injection.
     {
         private readonly IConfiguration _config;
 
-        //the constructor, setting the field
         public DepartmentsController(IConfiguration config)
         {
             _config = config;
@@ -46,13 +42,12 @@ namespace BangazonAPI.Controllers
                                       d.Name AS DepartmentName,
                                       d.Budget as DepartmentBudget
                                       FROM Department AS d";
-                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    SqlDataReader reader = await cmd.ExecuteReaderAsync();
                     List<Department> departments = new List<Department>();
-
-
+                    
                     while (reader.Read())
                     {
-
                         Department department = new Department
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
@@ -64,7 +59,6 @@ namespace BangazonAPI.Controllers
                     }
                     reader.Close();
 
-                    //Ok method is inheritated by the Controller method. The Ok method returns/wraps it up in a HTTP response with a 200 response code.
                     return Ok(departments);
                 }
             }
@@ -104,8 +98,8 @@ namespace BangazonAPI.Controllers
                     cmd.CommandText = @"INSERT INTO Department (Name, Budget)
                                         OUTPUT INSERTED.Id
                                         VALUES (@name, @budget)";
-                    cmd.Parameters.Add(new SqlParameter("@Name", department.Name));
-                    cmd.Parameters.Add(new SqlParameter("@Budget", department.Budget));
+                    cmd.Parameters.Add(new SqlParameter("@name", department.Name));
+                    cmd.Parameters.Add(new SqlParameter("@budget", department.Budget));
 
                     int newId = (int)await cmd.ExecuteScalarAsync();
                     department.Id = newId;
@@ -125,13 +119,14 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"UPDATE Department
-                                            SET Name = @name, Budget = @budget
+                                            SET Name = @name, 
+                                            Budget = @budget
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@name", department.Name));
                         cmd.Parameters.Add(new SqlParameter("@budget", department.Budget));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -166,7 +161,7 @@ namespace BangazonAPI.Controllers
                         cmd.CommandText = @"DELETE FROM Department WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
                         {
                             return new StatusCodeResult(StatusCodes.Status204NoContent);
@@ -232,13 +227,13 @@ namespace BangazonAPI.Controllers
                         LEFT JOIN Employee e ON d.Id = e.DepartmentId
                         WHERE d.Id = 1";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
+
                     SqlDataReader reader = cmd.ExecuteReader();
+
                     List<Department> departments = new List<Department>();
 
                     Department department = null;
 
-
-                    //every row
                     while (reader.Read())
                     {
                         var departmentId = reader.GetInt32(reader.GetOrdinal("DepartmentId"));
@@ -246,14 +241,12 @@ namespace BangazonAPI.Controllers
 
                         if (departmentAlreadyAdded == null)
                         {
-
                             department = new Department
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
                                 Budget = reader.GetInt32(reader.GetOrdinal("DepartmentBudget")),
                                 Name = reader.GetString(reader.GetOrdinal("DepartmentName"))
                             };
-
 
                             var employee = new Employee()
                             {
@@ -284,11 +277,9 @@ namespace BangazonAPI.Controllers
 
                             departmentAlreadyAdded.Employees.Add(employee);
                         }
-
                     }
                     reader.Close();
                     return (department);
-
                 }
             }
         }
@@ -310,11 +301,9 @@ namespace BangazonAPI.Controllers
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Department department = null;
-
                    
                         if (reader.Read())
                         {
-
                             department = new Department
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
@@ -323,7 +312,6 @@ namespace BangazonAPI.Controllers
                             };
                         }
                     return (department);
-
                 }
             }
         }
